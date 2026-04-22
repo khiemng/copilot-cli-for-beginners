@@ -1,32 +1,23 @@
 import sys
 from books import BookCollection
-
+from utils import print_books
 
 # Global collection instance
-collection = BookCollection()
+collection: BookCollection = BookCollection()
 
 
-def show_books(books):
-    """Display books in a user-friendly format."""
-    if not books:
-        print("No books found.")
-        return
-
-    print("\nYour Book Collection:\n")
-
-    for index, book in enumerate(books, start=1):
-        status = "✓" if book.read else " "
-        print(f"{index}. [{status}] {book.title} by {book.author} ({book.year})")
-
-    print()
 
 
-def handle_list():
+def handle_list() -> None:
     books = collection.list_books()
-    show_books(books)
+    print_books(books)
+
+def handle_unread() -> None:
+    books = collection.get_unread_books()
+    print_books(books)
 
 
-def handle_add():
+def handle_add() -> None:
     print("\nAdd a New Book\n")
 
     title = input("Title: ").strip()
@@ -41,7 +32,7 @@ def handle_add():
         print(f"\nError: {e}\n")
 
 
-def handle_remove():
+def handle_remove() -> None:
     print("\nRemove a Book\n")
 
     title = input("Enter the title of the book to remove: ").strip()
@@ -50,45 +41,62 @@ def handle_remove():
     print("\nBook removed if it existed.\n")
 
 
-def handle_find():
+def handle_find() -> None:
     print("\nFind Books by Author\n")
 
     author = input("Author name: ").strip()
     books = collection.find_by_author(author)
 
-    show_books(books)
+    print_books(books)
 
 
-def show_help():
+def handle_mark() -> None:
+    print("\nMark a Book as Read\n")
+
+    title = input("Enter the title of the book to mark as read: ").strip()
+    success = collection.mark_as_read(title)
+
+    if success:
+        print(f"\n\"{title}\" marked as read.\n")
+    else:
+        print(f"\nBook \"{title}\" not found.\n")
+
+
+def show_help() -> None:
     print("""
 Book Collection Helper
 
 Commands:
   list     - Show all books
+  unread   - Show unread books
   add      - Add a new book
   remove   - Remove a book by title
   find     - Find books by author
+  mark     - Mark a book as read
   help     - Show this help message
 """)
 
 
-def main():
+def main() -> None:
     if len(sys.argv) < 2:
         show_help()
         return
 
     command = sys.argv[1].lower()
 
-    if command == "list":
-        handle_list()
-    elif command == "add":
-        handle_add()
-    elif command == "remove":
-        handle_remove()
-    elif command == "find":
-        handle_find()
-    elif command == "help":
-        show_help()
+    commands = {
+        "list": handle_list,
+        "unread": handle_unread,
+        "add": handle_add,
+        "remove": handle_remove,
+        "find": handle_find,
+        "mark": handle_mark,
+        "help": show_help,
+    }
+
+    handler = commands.get(command)
+    if handler:
+        handler()
     else:
         print("Unknown command.\n")
         show_help()
