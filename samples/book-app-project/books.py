@@ -36,6 +36,9 @@ class BookCollection:
             json.dump([asdict(b) for b in self.books], f, indent=2)
 
     def add_book(self, title: str, author: str, year: int) -> Book:
+        title = title.strip()
+        if not title:
+            raise ValueError("title cannot be empty")
         book = Book(title=title, author=author, year=year)
         self.books.append(book)
         self.save_books()
@@ -43,6 +46,10 @@ class BookCollection:
 
     def list_books(self) -> List[Book]:
         return self.books
+
+    def get_unread_books(self) -> List[Book]:
+        """Return all books not marked as read."""
+        return [b for b in self.books if not getattr(b, "read", False)]
 
     def find_book_by_title(self, title: str) -> Optional[Book]:
         for book in self.books:
@@ -68,5 +75,21 @@ class BookCollection:
         return False
 
     def find_by_author(self, author: str) -> List[Book]:
-        """Find all books by a given author."""
-        return [b for b in self.books if b.author.lower() == author.lower()]
+        """Find all books by a given author (supports partial, case-insensitive matches)."""
+        if not author:
+            return []
+        query = author.strip().lower()
+        return [b for b in self.books if query in b.author.lower()]
+
+    def list_by_year(self, start: int, end: int) -> List[Book]:
+        """Return books published between start and end years (inclusive).
+
+        Raises:
+            TypeError: if start or end are not integers.
+            ValueError: if start > end.
+        """
+        if not isinstance(start, int) or not isinstance(end, int):
+            raise TypeError("start and end must be integers")
+        if start > end:
+            raise ValueError("start must be <= end")
+        return [b for b in self.books if start <= b.year <= end]
